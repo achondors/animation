@@ -2,6 +2,8 @@ from __future__ import division
 
 import math
 import numpy as np
+import matplotlib as mpl
+
 from matplotlib import cm
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -26,10 +28,16 @@ The components used are:
   * Timer (text)
   * Stars (scatter)
   * Snow (scatter)
-  * Sky (color map)
   * Messages (text)
 
 """
+
+# NOTE: Workaround for issue
+# https://github.com/matplotlib/matplotlib/issues/1008/
+# so that we should not patch
+# /usr/share/pyshare/matplotlib/figure.py...
+mpl.rcParams["savefig.facecolor"] = "black"
+mpl.rcParams["savefig.edgecolor"] = "black"
 
 # Size related constants
 FIGSIZE = 10, 5  # inches
@@ -182,7 +190,12 @@ class MyDay(object):
                 cmap_idx = SKYLINSPACE[self.now - MIDNIGHT]
                 skycolor = SKYCMAP(int(cmap_idx))
                 print "Adding sky color...", skycolor, cmap_idx
+                # Workaround for issue #1008
+                # https://github.com/matplotlib/matplotlib/issues/1008/
+                mpl.rcParams["savefig.facecolor"] = skycolor
+                mpl.rcParams["savefig.edgecolor"] = skycolor
                 fig.set_facecolor(skycolor)
+                ax.set_axis_bgcolor(skycolor)
             except IndexError:
                 pass
 
@@ -217,6 +230,9 @@ class MyDay(object):
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure(figsize=FIGSIZE, facecolor="black", edgecolor="black")
+fig.set_figheight(10)
+fig.set_figwidth(20)
+
 
 # First argument is [left, bottom, width, height] in normalized (0, 1) units
 ax = plt.axes([0, 0, 1, 1], xlim=(XMIN, XMAX), ylim=(YMIN, YMAX), frameon=False)
@@ -235,10 +251,11 @@ def animate(i):
 
 # Call the animator. blit=True means only re-draw the parts that have changed.
 # Here we redraw everything...
+print "Start animation with %s frames and %s interval" % (FRAMES, INTERVAL)
 anim = animation.FuncAnimation(fig, animate, repeat=False, blit=False,
                                frames=FRAMES, interval=INTERVAL)
 
-plt.show()
+#plt.show()
 
 print "Saving it with fps=%s..." % FPS
-#anim.save("night.mp4", fps=FPS)
+anim.save("night.mp4", fps=FPS)
